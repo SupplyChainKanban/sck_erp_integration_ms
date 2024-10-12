@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CreateErpIntegrationDto } from './dto/create-erp-integration.dto';
-import { PrismaClient } from '@prisma/client';
+import { ERPOrderStatus, PrismaClient } from '@prisma/client';
 import { ClientProxy } from '@nestjs/microservices';
 import { SCK_NATS_SERVICE } from 'src/config';
 
@@ -77,32 +77,41 @@ export class ErpIntegrationService extends PrismaClient implements OnModuleInit 
       }
     })
 
-    console.log(erpOrders)
-    // for(const erpOrder of erpOrders) {
+    for (const erpOrder of erpOrders) {
+      const erpResponse = await this.getERPOrderStatus(erpOrder.erpOrderID);
+
+      if (erpResponse.status === 'Completed') {
+        console.log('LLegó a completado')
+        await this.changeERPOrderStatus(erpOrder.id, 'Completed');
+
+        this.client.emit('updateOrderStatus', {
+          id: erpOrder.orderId,
+          status: 'BOUGHT'
+        })
+
+        //     //TODO: Envíe la inserción al microservicio de ingestión para que pase el ciclo completo y se almacene la compra.
 
 
+      } else if (erpResponse.status === 'Failed') {
+        console.log('LLegó a Failed')
+        await this.changeERPOrderStatus(erpOrder.id, 'Failed');
 
-    //   const erpResponse = await this.getERPOrderStatus(erpOrder.erpOrderID);
+        this.client.emit('updateOrderStatus', {
+          id: erpOrder.orderId,
+          status: 'DISMISSED'
+        })
 
-    //   if (erpResponse.status === 'Completed') {
-    //     //TODO: Editar estado de la ordenalERP
+      }
 
-    //     //TODO: Envíe la actualización de estado al microservicio de órdenes BOUGHT
-
-    //     //TODO: Envíe la inserción al microservicio de ingestión para que pase el ciclo completo y se almacene la compra.
-    //   } else if (erpResponse.status === 'Failed') {
-    //     //TODO: Editar estado de la ordenalERP a Failed
-
-    //     //TODO: Envíe la actualización de estado al microservicio de órdenes DISMISSED
-
-    //   }
-
-    //   //TODO: GUARDAR EL LOG DE LA ORDEN: 
-
-
-    // }
-
-
+      const erpLog = await this.eRPLog.create({
+        data: {
+          erpOrderId: erpOrder.id,
+          action: 'CheckOrderStatus',
+          response: `Estado de la orden en el ERP: ${erpResponse.status}`,
+        }
+      })
+      console.log('Desde el chequeo de status', erpLog)
+    }
 
 
   }
@@ -115,6 +124,17 @@ export class ErpIntegrationService extends PrismaClient implements OnModuleInit 
     return { status: 'Completed', fechaRealDeCompra: new Date(), quantity: 100 }; // Failed, InProcess
 
 
+  }
+
+  private async changeERPOrderStatus(id: string, status: ERPOrderStatus) {
+    try {
+      await this.eRPOrder.update({
+        where: { id },
+        data: { status }
+      })
+    } catch (error) {
+
+    }
   }
 
 
