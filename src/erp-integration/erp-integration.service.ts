@@ -90,7 +90,24 @@ export class ErpIntegrationService extends PrismaClient implements OnModuleInit 
         })
 
         //     //TODO: Envíe la inserción al microservicio de ingestión para que pase el ciclo completo y se almacene la compra.
-
+        this.client.emit({ cmd: 'createRawData' }, {
+          dataSchemaVersion: 'v1',
+          ingestedBy: '456e1234-e89b-12d3-a456-426614174001',
+          priority: 'HIGH',
+          dataSourceId: 'b4f500af-03fa-4e79-82b4-a25d083b8251',
+          dataPayload: {
+            materialID: "ACABJANTVE",
+            materialName: "ACAB- JANTAS VESTIR",
+            purchaseQuantity: 368.00,
+            purchaseDate: '08/01/2024',
+            costPerUnit: 3.45,
+            totalCost: 1269.60,
+            unitOfMeasure: 'UNIDADES',
+            supplierName: 'Descripción del cliente o proveedor',
+            paymentMethod: "Fact /",
+            materialCategory: "ACAB- JANTAS VESTIR",
+          }
+        })
 
       } else if (erpResponse.status === 'Failed') {
         console.log('LLegó a Failed')
