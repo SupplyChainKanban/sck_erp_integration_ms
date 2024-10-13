@@ -27,4 +27,5 @@ async function main() {
   await app.listen();
   logger.log(`Aplication running on port 3006`)
 }
+
 main();

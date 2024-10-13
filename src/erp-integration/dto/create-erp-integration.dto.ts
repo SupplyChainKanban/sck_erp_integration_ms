@@ -10,13 +10,9 @@ export class CreateErpIntegrationDto {
     public orderId: string;
 
 
-    // public erpOrderID?: string;
-
     @IsNotEmpty()
     @IsString()
-    // @IsUUID()
     public materialID: string;
-
 
 
     @IsNotEmpty()
@@ -24,9 +20,7 @@ export class CreateErpIntegrationDto {
     public orderQuantity: number;
 
 
-
     @IsNotEmpty()
-    // @IsString()
     @IsDate()
     @Type(() => Date)
     public predictedDate: Date;

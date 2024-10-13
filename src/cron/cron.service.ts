@@ -11,7 +11,7 @@ export class CronService {
 
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async checkERPOrdersStatus() {
 
     await this.erpIntegrationService.checkERPOrdersStatus();
